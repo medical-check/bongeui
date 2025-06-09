@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>병명으로 질병 검색</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>병명으로 검색</h1>
+    <input type="text" id="search-input" placeholder="질병명을 입력하세요" />
+    <button onclick="searchDisease()">검색</button>
+
+    <div id="result" style="margin-top: 20px;"></div>
+
+    <div style="margin-top: 20px;">
+        <a href="select.html">뒤로가기</a>
+        <a href="index.html">나가기</a>
+    </div>
+
+    <script src="data.js"></script>
+    <script>
+        function searchDisease() {
+            const input = document.getElementById('search-input').value.trim();
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '';
+
+            if (!input) {
+                resultDiv.textContent = "질병명을 입력하세요.";
+                return;
+            }
+
+            const found = [];
+
+            for (let symptom in diseaseData) {
+                diseaseData[symptom].forEach(disease => {
+                    if (disease.병명.includes(input)) {
+                        let existing = found.find(d => d.병명 === disease.병명);
+                        if (existing) {
+                            if (!existing.증상.includes(symptom)) {
+                                existing.증상.push(symptom);
+                            }
+                        } else {
+                            found.push({
+                                병명: disease.병명,
+                                치료방법: disease.치료방법,
+                                증상: [symptom]
+                            });
+                        }
+                    }
+                });
+            }
+
+            if (found.length === 0) {
+                resultDiv.innerHTML = "<p>검색 결과가 없습니다.</p>";
+            } else {
+                found.forEach(disease => {
+                    const div = document.createElement('div');
+                    div.innerHTML = `<h3>${disease.병명}</h3>
+                        <p><strong>증상:</strong> ${disease.증상.join(', ')}</p>
+                        <p><strong>치료방법:</strong> ${disease.치료방법}</p>`;
+                    resultDiv.appendChild(div);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
