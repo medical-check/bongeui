@@ -2,71 +2,78 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>병명으로 질병 검색</title>
+    <title>증상 검색</title>
     <link rel="stylesheet" href="style.css">
+    <script src="data.js"></script>
 </head>
 <body>
-    <h1>병명으로 검색</h1>
-    <input type="text" id="search-input" placeholder="질병명을 입력하세요" />
-    <button onclick="searchDisease()">검색</button>
+    <h2>증상을 입력하세요</h2>
+    <div style="display: flex; align-items: center;">
+        <input type="text" id="symptom-input" placeholder="예: 기침, 발열, 두통">
+        <button onclick="searchSymptom()">검색</button>
+    </div>
 
     <div id="result" style="margin-top: 20px;"></div>
 
     <div style="margin-top: 20px;">
         <a href="select.html">뒤로가기</a>
         <a href="index.html">나가기</a>
+        <a href="symptom_checkbox.html">증상 체크박스</a>
     </div>
 
-    <script src="data.js"></script>
     <script>
-        // 엔터 키로도 검색 가능하게 이벤트 리스너 추가
-        document.getElementById("search-input").addEventListener("keyup", function(event) {
+        // 엔터 키 입력으로도 검색되도록 설정
+        document.getElementById("symptom-input").addEventListener("keyup", function(event) {
             if (event.key === "Enter") {
-                searchDisease();
+                searchSymptom();
             }
         });
 
-        function searchDisease() {
-            const input = document.getElementById('search-input').value.trim();
+        function searchSymptom() {
+            const input = document.getElementById('symptom-input').value.trim();
             const resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = '';
+            resultDiv.innerHTML = "";
 
             if (!input) {
-                resultDiv.textContent = "질병명을 입력하세요.";
+                resultDiv.innerHTML = "<p>증상을 입력해주세요.</p>";
                 return;
             }
 
-            const found = [];
+            const symptoms = input.split(',').map(s => s.trim()).filter(s => s !== "");
+            const foundDiseases = new Map();
 
-            for (let symptom in diseaseData) {
-                diseaseData[symptom].forEach(disease => {
-                    if (disease.병명.includes(input)) {
-                        let existing = found.find(d => d.병명 === disease.병명);
-                        if (existing) {
-                            if (!existing.증상.includes(symptom)) {
-                                existing.증상.push(symptom);
-                            }
-                        } else {
-                            found.push({
+            symptoms.forEach(symptom => {
+                const matches = diseaseData[symptom];
+                if (matches) {
+                    matches.forEach(disease => {
+                        const key = disease.병명;
+                        if (!foundDiseases.has(key)) {
+                            foundDiseases.set(key, {
                                 병명: disease.병명,
                                 치료방법: disease.치료방법,
-                                증상: [symptom]
+                                증상: new Set(disease.증상)
                             });
+                        } else {
+                            const existing = foundDiseases.get(key);
+                            disease.증상.forEach(s => existing.증상.add(s));
                         }
-                    }
-                });
+                    });
+                }
+            });
+
+            if (foundDiseases.size === 0) {
+                resultDiv.innerHTML = "<p>해당 증상에 대한 병명을 찾을 수 없습니다.</p>";
+                return;
             }
 
-            if (found.length === 0) {
-                resultDiv.innerHTML = "<p>검색 결과가 없습니다.</p>";
-            } else {
-                found.forEach(disease => {
-                    const div = document.createElement('div');
-                    div.innerHTML = `<h3>${disease.병명}</h3>
-                        <p><strong>증상:</strong> ${disease.증상.join(', ')}</p>
-                        <p><strong>치료방법:</strong> ${disease.치료방법}</p>`;
-                    resultDiv.appendChild(div);
-                });
+            for (const disease of foundDiseases.values()) {
+                const block = document.createElement('div');
+                block.innerHTML = `
+                    <h3>${disease.병명}</h3>
+                    <p><strong>증상:</strong> ${Array.from(disease.증상).join(', ')}</p>
+                    <p><strong>치료방법:</strong> ${disease.치료방법}</p>
+                `;
+                resultDiv.appendChild(block);
             }
         }
     </script>
