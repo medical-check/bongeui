@@ -9,7 +9,7 @@
 <body>
     <h2>증상을 입력하세요</h2>
     <div style="display: flex; align-items: center;">
-        <input type="text" id="symptom-input" placeholder="예: 기침, 두통">
+        <input type="text" id="symptom-input" placeholder="예: 기침">
         <button onclick="searchSymptom()">검색</button>
     </div>
 
@@ -23,7 +23,7 @@
 
     <script>
         // Enter 키 입력 시 검색 실행
-        document.getElementById("symptom-input").addEventListener("keyup", function (event) {
+        document.getElementById("symptom-input").addEventListener("keyup", function(event) {
             if (event.key === "Enter") {
                 searchSymptom();
             }
@@ -39,21 +39,27 @@
                 return;
             }
 
-            const symptomList = input.split(',').map(s => s.trim());
-            const matchedDiseases = new Map(); // 병명 중복 제거용
+            const inputSymptoms = input.split(',').map(s => s.trim());
+            const matchedDiseases = [];
 
-            symptomList.forEach(symptom => {
-                const diseases = diseaseData[symptom];
-                if (diseases) {
-                    diseases.forEach(disease => {
-                        if (!matchedDiseases.has(disease["병명"])) {
-                            matchedDiseases.set(disease["병명"], disease);
+            inputSymptoms.forEach(symptom => {
+                const matches = diseaseData[symptom];
+                if (matches && matches.length > 0) {
+                    matches.forEach(disease => {
+                        const key = disease["병명"];
+                        const existing = matchedDiseases.find(d => d.병명 === key);
+                        if (!existing) {
+                            matchedDiseases.push({
+                                병명: disease["병명"],
+                                증상: disease["증상"],
+                                치료방법: disease["치료방법"]
+                            });
                         }
                     });
                 }
             });
 
-            if (matchedDiseases.size === 0) {
+            if (matchedDiseases.length === 0) {
                 resultDiv.innerHTML = "<p>해당 증상에 대한 병명을 찾을 수 없습니다.</p>";
                 return;
             }
